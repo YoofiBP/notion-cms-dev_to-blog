@@ -1,0 +1,9 @@
+name: upload-to-devto
+on:
+  schedule:
+    - cron: '0 0 * * 6,0'
+jobs:
+  get_updates:
+    runs-on: ubuntu-latest
+    steps:
+
