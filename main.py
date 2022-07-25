@@ -38,16 +38,28 @@ async def main():
     try:
         print('Getting Blog Pages from Notion')
         last_run_date = get_last_run_at()
-        blog_pages_filter = {}
+        notion_filters = [
+            {
+                "property": "Published",
+                "checkbox": {
+                    "equals": True
+                }
+            }
+        ]
         if last_run_date is not None:
-            blog_pages_filter = json.dumps({
-                "filter": {
+            notion_filters.append(
+                {
                     "timestamp": "last_edited_time",
                     "last_edited_time": {
                         "after": last_run_date
                     }
                 }
-            })
+            )
+        blog_pages_filter = json.dumps({
+            "filter": {
+                "and": notion_filters,
+            }
+        })
         response = requests.post(notion_api_blog_pages_endpoint,
                                  headers={**notion_required_headers, 'Content-Type': 'application/json'},
                                  data=blog_pages_filter)
@@ -88,16 +100,20 @@ async def main():
             if blog.operation == Operations.CREATE:
                 print('Creating post')
                 response = create_post_on_dev_to(blog_data)
-                print('Updating firebase')
-                db.collection(u'posts').document(blog.id).set({
-                    u'dev_to_id': response['id']
-                })
+                if response['id'] is not None:
+                    db.collection(u'posts').document(blog.id).set({
+                        u'dev_to_id': response['id']
+                    })
+                else:
+                    print(response)
             elif blog.operation == Operations.EDIT:
                 response = edit_post_on_dev_to(blog_data, blog.dev_to_id)
-                db.collection(u'posts').document(blog.id).set({
-                    u'dev_to_id': response['id']
-                })
-                pass
+                if response['id'] is not None:
+                    db.collection(u'posts').document(blog.id).set({
+                        u'dev_to_id': response['id']
+                    })
+                else:
+                    print(response)
             else:
                 raise Exception('Unrecognised operation')
             number_of_pages -= 1
