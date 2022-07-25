@@ -1,9 +1,10 @@
 import asyncio
+import io
+import json
+from zipfile import ZipFile
 
 import requests
-import json
-import io
-from zipfile import ZipFile
+
 from utils import NotionBlogOutput
 
 notion_token: str = '82b22234beceb21591541f56069ae21fd63f43324cba097651d5c1264461fa07d9d2845e4422300014d1899b7076af297eef91a2c88af58e2f1b666c8c83cde4bfa9c18e2bff38be80ff178b1bbd'
@@ -79,7 +80,7 @@ def create_post_on_dev_to(post: NotionBlogOutput):
     body = json.dumps({
         'article': {
             'title': post.title,
-            'published': False,
+            'published': True,
             'body_markdown': post.body
         }
     })
@@ -95,7 +96,7 @@ def edit_post_on_dev_to(post: NotionBlogOutput, dev_to_post_id):
     body = json.dumps({
         'article': {
             'title': post.title,
-            'published': False,
+            'published': True,
             'body_markdown': post.body
         }
     })
