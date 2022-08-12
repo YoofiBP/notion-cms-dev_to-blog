@@ -1,8 +1,3 @@
-import datetime
-
-from firebase import db
-
-
 class Operations:
     CREATE = 'create'
     EDIT = 'edit'
@@ -19,9 +14,3 @@ class NotionBlogOutput:
     def __init__(self, title, body):
         self.title = title
         self.body = body
-
-
-def update_last_run_at():
-    db.collection(u'config').document('config').set({
-        u'last_run_at': datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-    })

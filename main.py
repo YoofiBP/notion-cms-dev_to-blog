@@ -5,12 +5,12 @@ import os
 import requests
 import rollbar
 from dotenv import load_dotenv
-from google.cloud.firestore_v1.field_path import FieldPath
 
 from exporter import create_export_task, get_export_url_from_task, get_blog_data_from_url, create_post_on_dev_to, \
     edit_post_on_dev_to
-from firebase import db
-from utils import Operations, PostOperation, update_last_run_at
+from persistence.firebase import db
+from persistence.table_commands import update_last_run_at, get_last_run_at, get_post_metadata
+from utils import Operations, PostOperation
 
 load_dotenv()
 
@@ -22,16 +22,6 @@ notion_api_version: str = os.environ['NOTION_API_VERSION']
 
 notion_api_blog_pages_endpoint = f'https://api.notion.com/v1/databases/{notion_blog_database_id}/query'
 notion_required_headers = {'Authorization': f'Bearer {notion_api_secret}', 'Notion-Version': notion_api_version}
-
-
-def get_last_run_at() -> str:
-    last_run_at = None
-    try:
-        config_ref = db.collection('config')
-        last_run_at = config_ref.document(u'config').get().to_dict()['last_run_at']
-    except:
-        pass
-    return last_run_at
 
 
 async def main():
@@ -71,26 +61,26 @@ async def main():
             return
 
         print('Getting Blog Pages from Firebase')
-        blog_ref = db.collection(u'posts')
 
-        firebase_posts = blog_ref.where(FieldPath.document_id(), u'in', notion_pages_ids).get()
-        firebase_posts_dict = {}
+        posts = get_post_metadata()
+        posts_dict = {}
 
-        for firebase_post in firebase_posts:
-            firebase_posts_dict[firebase_post.id] = firebase_post
+        for post in posts:
+            posts_dict[post.notion_id] = post
 
         blogs_to_post = []
 
         for page in blog_pages_from_notion:
-            if page['id'] not in firebase_posts_dict.keys():
+            if page['id'] not in posts_dict.keys():
                 blogs_to_post.append(PostOperation(operation=Operations.CREATE, page_id=page['id']))
             else:
                 blogs_to_post.append(PostOperation(operation=Operations.EDIT,
                                                    page_id=page['id'],
-                                                   dev_to_id=firebase_posts_dict[page['id']].get('dev_to_id')))
+                                                   dev_to_id=posts_dict[page['id']].dev_to_id))
 
         number_of_pages = len(blogs_to_post)
 
+        # TODO: Work on updating table with new data
         for blog in blogs_to_post:
             print(f'{number_of_pages} remaining')
             page_id = blog.id
