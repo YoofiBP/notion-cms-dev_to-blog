@@ -10,6 +10,7 @@ from utils import NotionBlogOutput
 notion_token: str = '82b22234beceb21591541f56069ae21fd63f43324cba097651d5c1264461fa07d9d2845e4422300014d1899b7076af297eef91a2c88af58e2f1b666c8c83cde4bfa9c18e2bff38be80ff178b1bbd'
 notion_export_headers = {'Cookie': f'token_v2={notion_token}', 'Content-Type': 'application/json'}
 dev_to_article_url = 'https://dev.to/api/articles'
+dev_to_api_key = os.environ['DEV_TO_API_KEY']
 
 
 def create_export_task(block_id: str):
@@ -74,7 +75,7 @@ def get_blog_data_from_url(export_url: str) -> NotionBlogOutput:
 
 def create_post_on_dev_to(post: NotionBlogOutput):
     headers = {
-        'api-key': 'r2Ry6BmhS9LbRRa6nq5uyPNn',
+        'api-key': dev_to_api_key,
         'Content-Type': 'application/json'
     }
     body = json.dumps({
@@ -90,7 +91,7 @@ def create_post_on_dev_to(post: NotionBlogOutput):
 
 def edit_post_on_dev_to(post: NotionBlogOutput, dev_to_post_id):
     headers = {
-        'api-key': 'r2Ry6BmhS9LbRRa6nq5uyPNn',
+        'api-key': dev_to_api_key,
         'Content-Type': 'application/json'
     }
     body = json.dumps({
